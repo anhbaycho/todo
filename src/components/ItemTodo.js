@@ -11,13 +11,14 @@ const ItemTodo = (props) => {
   const [targetValue, setTargetValue] = useState(props.itemData.name);
   const onChange = (item) => {
     setTargetValue(item.target.value);
+    props.itemData.name = item.target.value;
   };
 
   return (
     <div
       className="App-todo-list"
       style={
-        props.itemData.status
+        props.itemData.finishStatus
           ? { backgroundColor: "green" }
           : { backgroundColor: "#fff" }
       }
@@ -34,42 +35,36 @@ const ItemTodo = (props) => {
             style={{
               fontSize: 16,
               margin: 0,
-              textDecoration: props.itemData.status ? "line-through" : "",
-              display: isEdit ? "flex" : "none",
+              textDecoration: props.itemData.finishStatus ? "line-through" : "",
+              display: props.itemData.isEdit ? "flex" : "none",
             }}
+            onClick={() => navigate("/detail", { state: props.itemData })}
           >
             {targetValue}
           </h1>
           <Input
             placeholder={"Name"}
-            style={{ display: isEdit ? "none" : "flex" }}
+            style={{ display: props.itemData.isEdit ? "none" : "flex" }}
             defaultValue={props.itemData.name}
             onChange={onChange}
           />
           <Button
             icon={<EditFilled />}
-            onClick={() => setIsEdit(!isEdit)}
+            onClick={() => props.editName()}
           ></Button>
         </div>
-        {/* <Button
-          icon={
-            props.itemData.status ? <CheckSquareOutlined /> : <BorderOutlined />
-          }
-          onClick={() => props.onChangeStatus()}
-        /> */}
-
         <Switch
           checkedChildren="finished"
           unCheckedChildren="unfinished"
-          // value={props.itemData.status}
-          onChange={() => props.onChangeStatus()}
+          value={props.itemData.finishStatus}
+          onClick={() => props.onChangeStatus()}
         />
       </div>
-      <div
-        className="time"
-        onClick={() => navigate("/detail", { state: props.itemData })}
-      >
-        <div className="time1">
+      <div className="time">
+        <div
+          className="time1"
+          onClick={() => navigate("/detail", { state: props.itemData })}
+        >
           <p
             style={{
               height: 20,
@@ -105,7 +100,7 @@ const ItemTodo = (props) => {
         </div>
         <Button
           icon={<CloseCircleFilled style={{ color: "grey" }} />}
-          onClick={() => props.removeItem(props.id)}
+          onClick={() => props.removeItem()}
         ></Button>
       </div>
     </div>

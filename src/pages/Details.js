@@ -25,8 +25,9 @@ function Details() {
       <h1>Name: {datatodo.name}</h1>
       <h1>Type: {datatodo.type}</h1>
       <h1>Date: {datatodo.date}</h1>
-      <h1>Status: {datatodo.status}</h1>
-      <h1>ID: {datatodo.id}</h1>
+      <h1>Status: {datatodo.finishStatus?"finished":"unfinished"}</h1>
+      <h1>IsEdit: {datatodo.isEdit?"edited":"unedited"}</h1>
+        
     </div>
   );
 }

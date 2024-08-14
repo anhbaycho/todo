@@ -8,13 +8,15 @@ import { Button, Form, Input } from "antd";
 import ItemTodo from "../components/ItemTodo";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../config-firebase";
+import { Select } from "antd";
 
 function Home() {
   const emailLocal = localStorage.getItem("email");
   const [form] = Form.useForm();
   const [dataTodo, setDataTodo] = useState([]);
   const [dateTodo, setDateTodo] = useState();
-  const [checkData, setCheckData] = useState(0  );
+  const [dataFilter, setDataFilter] = useState([]);
+  const [checkData, setCheckData] = useState(0);
 
   const setDataToFirebase = async () => {
     await setDoc(doc(db, "user", emailLocal), { todoList: dataTodo });
@@ -23,20 +25,21 @@ function Home() {
   const onChangeDateTodo = (date, dateString) => {
     setDateTodo(dateString);
   };
-  const removeItem = (id) => {
-    setDataTodo(dataTodo.filter((item) => item.id !== id));
-  };
+  // const removeItem = (id) => {
+  //   setDataTodo(dataTodo.filter((item) => item.id !== id));
+  // };
 
   const getDataFireStore = async () => {
-    setDataTodo((await getDoc(doc(db, "user", emailLocal))).data().todoList);
+    setDataTodo(
+      (await getDoc(doc(db, "user", emailLocal))).data().todoList || []
+    );
   };
-  // setCheckData(0);
+
   useEffect(() => {
     if (checkData === 0) {
       getDataFireStore();
       setCheckData(1);
-    }
-    else if (checkData === 1) {
+    } else if (checkData === 1) {
       setDataToFirebase();
     }
   }, [dataTodo]);
@@ -46,10 +49,10 @@ function Home() {
       ...dataTodo,
       {
         name: values.name,
+        isEdit: true,
         type: values.type,
         date: dateTodo,
-        status: false,
-        isEdit: true,
+        finishStatus: false,
       },
     ]);
     form.resetFields();
@@ -64,13 +67,53 @@ function Home() {
   const handleStatusTodolist = (currentItem) => {
     setDataTodo((previousTodoList) =>
       previousTodoList.map((preItem) =>
-        preItem.name === currentItem.name
-          ? { ...preItem, status: !preItem.status }
+        preItem?.name === currentItem?.name
+          ? { ...preItem, finishStatus: !preItem.finishStatus }
           : preItem
       )
     );
     setDataToFirebase();
   };
+
+  const removeItemtodo = (currentItem) => {
+    setDataTodo((previousTodoList) =>
+      previousTodoList.filter((preItem) => {
+        return preItem?.name !== currentItem?.name;
+      })
+    );
+    setDataToFirebase();
+  };
+
+  const editName = (currentItem) => {
+    setDataTodo((previousTodoList) =>
+      previousTodoList.map((preItem) =>
+        preItem?.name === currentItem?.name
+          ? { ...preItem, isEdit: !preItem.isEdit }
+          : preItem
+      )
+    );
+    setDataToFirebase();
+  };
+  console.log("datatodo", dataTodo);
+  console.log("datafilter", dataFilter);
+  const typeFilter = (value) => {
+    setDataFilter(
+      value === "All"
+        ? dataTodo
+        : dataTodo.filter((preItem) => {
+            return preItem.type === value;
+          })
+    );
+  };
+  // const handleEditNameTodolist = (currentItem) => {
+  //   setDataTodo((previousTodoList) =>
+  //     previousTodoList.map((preItem) =>
+  //       preItem.name === currentItem.name
+  //         ? {...preItem, isEdit: !preItem.isEdit }
+  //         : preItem
+  //     )
+  //   );
+  // };
 
   return (
     <div className="App">
@@ -135,14 +178,35 @@ function Home() {
                 labelCol={{ style: { width: 60 } }}
                 labelAlign="left"
               >
-                <Input
+                {
+                  /* <Input
                   type="text"
                   placeholder="Type?"
                   style={{
                     borderRadius: 20,
                     height: 30,
                   }}
-                />
+                /> */
+
+                  <Select
+                    style={{ borderRadius: 20, width: "100%" }}
+                    placeholder="Select a type"
+                    options={[
+                      {
+                        value: "hoctap",
+                        label: "Học tập",
+                      },
+                      {
+                        value: "vuichoi",
+                        label: "Vui chơi",
+                      },
+                      {
+                        value: "nghingoi",
+                        label: "Nghỉ ngơi",
+                      },
+                    ]}
+                  />
+                }
               </Form.Item>
             </div>
             <div
@@ -188,17 +252,40 @@ function Home() {
                 ></Button>
               </Form.Item>
             </div>
+            <Select
+              style={{ borderRadius: 20, width: 200, marginBottom: 20 }}
+              placeholder="Select a type"
+              options={[
+                {
+                  value: "All",
+                  label: "Tất cả",
+                },
+                {
+                  value: "hoctap",
+                  label: "Học tập",
+                },
+                {
+                  value: "vuichoi",
+                  label: "Vui chơi",
+                },
+                {
+                  value: "nghingoi",
+                  label: "Nghỉ ngơi",
+                },
+              ]}
+              onChange={typeFilter}
+            />
           </Form>
-          {dataTodo &&
-            dataTodo?.map((item) => (
-              <ItemTodo
-                key={item.id}
-                itemData={item}
-                isEdit={item.isEdit}
-                onChangeStatus={() => handleStatusTodolist(item)}
-                removeItem={(id) => removeItem(id)}
-              />
-            ))}
+          {dataFilter.map((item) => (
+            <ItemTodo
+              key={item.id}
+              itemData={item}
+              // isEdit={item.isEdit}
+              onChangeStatus={() => handleStatusTodolist(item)}
+              removeItem={() => removeItemtodo(item)}
+              editName={() => editName(item)}
+            />
+          ))}
         </div>
       </header>
     </div>
